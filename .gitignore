@@ -20,4 +20,4 @@
 .env.production.local
 
 #config
-config.js
+config/
