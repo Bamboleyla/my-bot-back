@@ -1,7 +1,9 @@
 const TelegramBot = require("node-telegram-bot-api");
-const { token, webAppUrl } = require("../config/config");
+const config = require("config");
+
 // Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(config.get("telegrammToken"), { polling: true });
+const webAppUrl = config.get("webAppUrl");
 
 const dialog_start = async (chatId) => {
   await bot.sendMessage(

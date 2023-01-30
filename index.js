@@ -2,9 +2,9 @@ const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 const corse = require("cors");
 const config = require("config");
-// const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 const { dialog_start } = require("./src/dialogs/dialog_start");
-const authRouter = require("./src/routes/auth.route");
+const router = require("./src/routes/routes");
 
 // Create a bot that uses 'polling' to fetch new updates
 // const bot = new TelegramBot(config.get("telegrammToken"), { polling: true });
@@ -12,10 +12,11 @@ const app = express();
 
 // app.use(session({ secret: config.get("sessionSecret") }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(corse());
 
 //Routes
-app.use("/api", authRouter);
+app.use("/api", router);
 
 // Listen for any kind of message. There are different kinds of
 // messages.
@@ -69,4 +70,11 @@ app.use("/api", authRouter);
 // });
 
 const PORT = config.get("port");
-app.listen(PORT, () => console.log(`Server started on PORT: ${PORT}`));
+const start = async () => {
+  try {
+    app.listen(PORT, () => console.log(`Server started on PORT: ${PORT}`));
+  } catch (error) {
+    console.error(error);
+  }
+};
+start();
