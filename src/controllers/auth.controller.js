@@ -97,27 +97,6 @@ class AuthController {
       return res.status(404).json({ msg: "Authorization error" });
     }
   }
-  async logout(req, res, next) {
-    try {
-    } catch (error) {}
-  }
-  async activate(req, res, next) {
-    try {
-    } catch (error) {}
-  }
-  async refresh(req, res, next) {
-    try {
-    } catch (error) {}
-  }
-  async registration(req, res, next) {
-    try {
-    } catch (error) {}
-  }
-  async getUsers(req, res, next) {
-    try {
-      res.json(["123", "456"]);
-    } catch (error) {}
-  }
 }
 
 module.exports = new AuthController();

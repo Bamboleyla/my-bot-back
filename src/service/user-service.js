@@ -1,58 +1,92 @@
-const UserModel = require("../models/user-model");
+const db = require("../../config/db");
 const bcrypt = require("bcrypt");
 const uuid = require("uuid");
+const config = require("config");
 const mailService = require("./mail-service");
 const tokenService = require("./token-service");
 const UserDto = require("../dtos/user-dto");
 const ApiError = require("../exceptions/api-error");
 
 class UserService {
-  async registration(email, password) {
-    const candidate = await UserModel.findOne({ email });
-    if (candidate) {
-      throw ApiError.BadRequest(
-        `Пользователь с почтовым адресом ${email} уже существует`
-      );
-    }
+  async registration({
+    firstName,
+    lastName,
+    middleName,
+    phoneNumber,
+    email,
+    country,
+    city,
+    tgToken,
+    password,
+  }) {
     const hashPassword = await bcrypt.hash(password, 3);
-    const activationLink = uuid.v4(); // v34fa-asfasf-142saf-sa-asf
-
-    const user = await UserModel.create({
-      email,
-      password: hashPassword,
-      activationLink,
-    });
-    await mailService.sendActivationMail(
-      email,
-      `${process.env.API_URL}/api/activate/${activationLink}`
+    const activationLink = uuid.v4();
+    const userID = await db.query(
+      `INSERT INTO Users (first_name,middle_name,last_name,email,phone,country,city,tg_token,user_password,active_link) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING Id,Email,Isactivated`,
+      [
+        firstName,
+        middleName,
+        lastName,
+        email,
+        phoneNumber,
+        country,
+        city,
+        tgToken,
+        hashPassword,
+        activationLink,
+      ]
     );
-
-    const userDto = new UserDto(user); // id, email, isActivated
-    const tokens = tokenService.generateTokens({ ...userDto });
-    await tokenService.saveToken(userDto.id, tokens.refreshToken);
-
-    return { ...tokens, user: userDto };
+    if (userID.rows.length === 1) {
+      await mailService.sendActivationMail(
+        email,
+        `${config.get("api_url")}/api/activate/${activationLink}`
+      );
+      await db.query(`INSERT INTO Tokens (user_id) VALUES($1)`, [
+        userID.rows[0].id,
+      ]);
+      const usetDto = new UserDto(userID.rows[0]);
+      const tokens = tokenService.generateTokens({
+        ...usetDto,
+      });
+      await tokenService.saveToken(userID.rows[0].id, tokens.refreshToken);
+      return { ...tokens, user: usetDto };
+    } else
+      throw new ApiError.BadRequest(
+        `Не удалось зарегистрировать пользователя c email: ${email}`
+      );
   }
 
   async activate(activationLink) {
-    const user = await UserModel.findOne({ activationLink });
-    if (!user) {
-      throw ApiError.BadRequest("Неккоректная ссылка активации");
+    const user = await db.query(`SELECT Id FROM Users WHERE active_link=$1`, [
+      activationLink,
+    ]);
+    if (user.rows.length !== 1) {
+      throw new ApiError.BadRequest(
+        `Неккоректная ссылка активации ${activationLink}`
+      );
     }
-    user.isActivated = true;
-    await user.save();
+    await db.query(`UPDATE Users SET isActivated=$1 WHERE id=$2`, [
+      true,
+      user.rows[0].id,
+    ]);
   }
 
   async login(email, password) {
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      throw ApiError.BadRequest("Пользователь с таким email не найден");
+    const user = await db.query(
+      `SELECT Id,Email,User_password, isactivated FROM Users WHERE email=$1`,
+      [email]
+    );
+    if (user.rows.length !== 1) {
+      throw new ApiError.BadRequest("Пользователь с таким email не найден");
     }
-    const isPassEquals = await bcrypt.compare(password, user.password);
+    const isPassEquals = await bcrypt.compare(
+      password,
+      user.rows[0].user_password
+    );
     if (!isPassEquals) {
-      throw ApiError.BadRequest("Неверный пароль");
+      throw new ApiError.BadRequest("Неверный пароль");
     }
-    const userDto = new UserDto(user);
+    const userDto = new UserDto(user.rows[0]);
     const tokens = tokenService.generateTokens({ ...userDto });
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -60,20 +94,26 @@ class UserService {
   }
 
   async logout(refreshToken) {
-    const token = await tokenService.removeToken(refreshToken);
-    return token;
+    await tokenService.removeToken(refreshToken);
+    return { status: "Ok" };
   }
 
   async refresh(refreshToken) {
     if (!refreshToken) {
-      throw ApiError.UnauthorizedError();
+      throw new ApiError.BadRequest("Ошибка авторизации");
     }
     const userData = tokenService.validateRefreshToken(refreshToken);
-    const tokenFromDb = await tokenService.findToken(refreshToken);
-    if (!userData || !tokenFromDb) {
-      throw ApiError.UnauthorizedError();
+    const { rows } = await db.query(
+      `SELECT user_id FROM Tokens WHERE token=$1`,
+      [refreshToken]
+    );
+    if (!userData || rows.length !== 1) {
+      throw new ApiError.BadRequest("Ошибка авторизации");
     }
-    const user = await UserModel.findById(userData.id);
+    const user = await db.query(
+      `SELECT Id,Email,Isactivated FROM Users WHERE Id=$1`,
+      [rows.user_id]
+    );
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });
 
@@ -82,8 +122,8 @@ class UserService {
   }
 
   async getAllUsers() {
-    const users = await UserModel.find();
-    return users;
+    const { rows } = await db.query(`SELECT * FROM Users`);
+    return rows;
   }
 }
 

@@ -1,13 +1,14 @@
 const jwt = require("jsonwebtoken");
-const tokenModel = require("../models/token-model");
+const db = require("../../config/db");
+const config = require("config");
 
 class TokenService {
   generateTokens(payload) {
-    const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: "15s",
-    });
-    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    const accessToken = jwt.sign(payload, config.get("jwt-access-secret"), {
       expiresIn: "30s",
+    });
+    const refreshToken = jwt.sign(payload, config.get("jwt-refresh-secret"), {
+      expiresIn: "30d",
     });
     return {
       accessToken,
@@ -17,7 +18,7 @@ class TokenService {
 
   validateAccessToken(token) {
     try {
-      const userData = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+      const userData = jwt.verify(token, config.get("jwt-access-secret"));
       return userData;
     } catch (e) {
       return null;
@@ -26,7 +27,7 @@ class TokenService {
 
   validateRefreshToken(token) {
     try {
-      const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+      const userData = jwt.verify(token, config.get("jwt-refresh-secret"));
       return userData;
     } catch (e) {
       return null;
@@ -34,18 +35,24 @@ class TokenService {
   }
 
   async saveToken(userId, refreshToken) {
-    const tokenData = await tokenModel.findOne({ user: userId });
-    if (tokenData) {
-      tokenData.refreshToken = refreshToken;
-      return tokenData.save();
-    }
-    const token = await tokenModel.create({ user: userId, refreshToken });
-    return token;
+    const tokenData = await db.query(`SELECT * FROM Tokens WHERE user_id=$1`, [
+      userId,
+    ]);
+    if (tokenData.rows.length === 1)
+      await db.query(`UPDATE Tokens SET token=$2 WHERE user_id=$1`, [
+        userId,
+        refreshToken,
+      ]);
   }
 
   async removeToken(refreshToken) {
-    const tokenData = await tokenModel.deleteOne({ refreshToken });
-    return tokenData;
+    const user = await db.query(`SELECT user_id FROM Tokens WHERE token=$1`, [
+      refreshToken,
+    ]);
+    if (user.rows.length === 1)
+      await db.query(`UPDATE Tokens SET token=${null} WHERE user_id=$1`, [
+        user.rows[0].user_id,
+      ]);
   }
 
   async findToken(refreshToken) {

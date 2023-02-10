@@ -5,6 +5,7 @@ const config = require("config");
 const cookieParser = require("cookie-parser");
 const { dialog_start } = require("./src/dialogs/dialog_start");
 const router = require("./src/routes/routes");
+const errorMiddleware = require("./src/middlewares/error-middleware");
 
 // Create a bot that uses 'polling' to fetch new updates
 // const bot = new TelegramBot(config.get("telegrammToken"), { polling: true });
@@ -14,6 +15,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(corse());
+app.use(errorMiddleware);
 
 //Routes
 app.use("/api", router);
