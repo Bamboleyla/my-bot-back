@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-const db = require("../../config/db");
-const config = require("config");
+import jwt from "jsonwebtoken";
+import db from "../../config/db";
+import config from "config";
 
 class TokenService {
   generateTokens(payload) {
@@ -54,11 +54,6 @@ class TokenService {
         user.rows[0].user_id,
       ]);
   }
-
-  async findToken(refreshToken) {
-    const tokenData = await tokenModel.findOne({ refreshToken });
-    return tokenData;
-  }
 }
 
-module.exports = new TokenService();
+export = new TokenService();

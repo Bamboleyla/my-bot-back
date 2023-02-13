@@ -1,4 +1,4 @@
-const db = require("../../config/db");
+import db from "../../config/db";
 
 class AuthController {
   async checkEmail(req, res) {

@@ -1,5 +1,5 @@
-const TelegramBot = require("node-telegram-bot-api");
-const config = require("config");
+import TelegramBot from "node-telegram-bot-api";
+import config from "config";
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(config.get("telegrammToken"), { polling: true });

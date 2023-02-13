@@ -1,7 +1,8 @@
-const nodemailer = require("nodemailer");
-const config = require("config");
+import nodemailer from "nodemailer";
+import config from "config";
 
 class MailService {
+  transporter: any;
   constructor() {
     this.transporter = nodemailer.createTransport(config.get("nodemailer"));
   }
@@ -22,4 +23,4 @@ class MailService {
   }
 }
 
-module.exports = new MailService();
+export = new MailService();

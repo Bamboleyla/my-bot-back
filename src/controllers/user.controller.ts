@@ -1,7 +1,7 @@
-const userService = require("../service/user-service");
-const config = require("config");
-const { validationResult } = require("express-validator");
-const ApiError = require("../exceptions/api-error");
+import userService from "../service/user-service";
+import config from "config";
+import { validationResult } from "express-validator";
+import ApiError from "../exceptions/api-error";
 
 class UserController {
   async registration(req, res, next) {

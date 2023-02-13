@@ -1,11 +1,11 @@
-const db = require("../../config/db");
-const bcrypt = require("bcrypt");
-const uuid = require("uuid");
-const config = require("config");
-const mailService = require("./mail-service");
-const tokenService = require("./token-service");
-const UserDto = require("../dtos/user-dto");
-const ApiError = require("../exceptions/api-error");
+import db from "../../config/db";
+import bcrypt from "bcrypt";
+import uuid from "uuid";
+import config from "config";
+import mailService from "./mail-service";
+import tokenService from "./token-service";
+import UserDto from "../dtos/user-dto";
+import ApiError from "../exceptions/api-error";
 
 class UserService {
   async registration({
@@ -51,7 +51,7 @@ class UserService {
       await tokenService.saveToken(userID.rows[0].id, tokens.refreshToken);
       return { ...tokens, user: usetDto };
     } else
-      throw new ApiError.BadRequest(
+      throw ApiError.BadRequest(
         `Не удалось зарегистрировать пользователя c email: ${email}`
       );
   }
@@ -61,7 +61,7 @@ class UserService {
       activationLink,
     ]);
     if (user.rows.length !== 1) {
-      throw new ApiError.BadRequest(
+      throw ApiError.BadRequest(
         `Неккоректная ссылка активации ${activationLink}`
       );
     }
@@ -77,14 +77,14 @@ class UserService {
       [email]
     );
     if (user.rows.length !== 1) {
-      throw new ApiError.BadRequest("Пользователь с таким email не найден");
+      throw ApiError.BadRequest("Пользователь с таким email не найден");
     }
     const isPassEquals = await bcrypt.compare(
       password,
       user.rows[0].user_password
     );
     if (!isPassEquals) {
-      throw new ApiError.BadRequest("Неверный пароль");
+      throw ApiError.BadRequest("Неверный пароль");
     }
     const userDto = new UserDto(user.rows[0]);
     const tokens = tokenService.generateTokens({ ...userDto });
@@ -100,7 +100,7 @@ class UserService {
 
   async refresh(refreshToken) {
     if (!refreshToken) {
-      throw new ApiError.BadRequest("Ошибка авторизации");
+      throw ApiError.BadRequest("Ошибка авторизации");
     }
     const userData = tokenService.validateRefreshToken(refreshToken);
     const { rows } = await db.query(
@@ -108,7 +108,7 @@ class UserService {
       [refreshToken]
     );
     if (!userData || rows.length !== 1) {
-      throw new ApiError.BadRequest("Ошибка авторизации");
+      throw ApiError.BadRequest("Ошибка авторизации");
     }
     const user = await db.query(
       `SELECT Id,Email,Isactivated FROM Users WHERE Id=$1`,
@@ -127,4 +127,4 @@ class UserService {
   }
 }
 
-module.exports = new UserService();
+export = new UserService();
