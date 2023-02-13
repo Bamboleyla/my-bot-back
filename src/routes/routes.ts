@@ -22,4 +22,4 @@ router.post(
   userController.registration
 );
 
-module.exports = router;
+export = router;

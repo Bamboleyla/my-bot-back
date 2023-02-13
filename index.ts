@@ -1,10 +1,10 @@
-const TelegramBot = require("node-telegram-bot-api");
-const express = require("express");
-const corse = require("cors");
-const config = require("config");
-const cookieParser = require("cookie-parser");
+import TelegramBot from "node-telegram-bot-api";
+import express from "express";
+import corse from "cors";
+import config from "config";
+import cookieParser from "cookie-parser";
 const { dialog_start } = require("./src/dialogs/dialog_start");
-const router = require("./src/routes/routes");
+import router from "./src/routes/routes";
 const errorMiddleware = require("./src/middlewares/error-middleware");
 
 // Create a bot that uses 'polling' to fetch new updates
