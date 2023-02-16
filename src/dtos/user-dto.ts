@@ -1,4 +1,4 @@
-class UserDto {
+export = class UserDto {
   email;
   id;
   isActivated;
@@ -8,6 +8,4 @@ class UserDto {
     this.id = model.id;
     this.isActivated = model.isactivated;
   }
-}
-
-export = UserDto;
+};

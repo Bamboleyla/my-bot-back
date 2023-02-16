@@ -2,10 +2,11 @@ import db from "../../config/db";
 import bcrypt from "bcrypt";
 import uuid from "uuid";
 import config from "config";
+import ApiError from "../exceptions/api-error";
+import { Iregistration } from "./user-service_interface";
 import mailService from "./mail-service";
 import tokenService from "./token-service";
 import UserDto from "../dtos/user-dto";
-import ApiError from "../exceptions/api-error";
 
 class UserService {
   async registration({
@@ -18,7 +19,7 @@ class UserService {
     city,
     tgToken,
     password,
-  }) {
+  }: Iregistration) {
     const hashPassword = await bcrypt.hash(password, 3);
     const activationLink = uuid.v4();
     const userID = await db.query(
@@ -56,7 +57,7 @@ class UserService {
       );
   }
 
-  async activate(activationLink) {
+  async activate(activationLink: string) {
     const user = await db.query(`SELECT Id FROM Users WHERE active_link=$1`, [
       activationLink,
     ]);
@@ -71,7 +72,7 @@ class UserService {
     ]);
   }
 
-  async login(email, password) {
+  async login(email: string, password: string) {
     const user = await db.query(
       `SELECT Id,Email,User_password, isactivated FROM Users WHERE email=$1`,
       [email]
@@ -93,16 +94,16 @@ class UserService {
     return { ...tokens, user: userDto };
   }
 
-  async logout(refreshToken) {
+  async logout(refreshToken: string) {
     await tokenService.removeToken(refreshToken);
     return { status: "Ok" };
   }
 
-  async refresh(refreshToken) {
+  async refresh(refreshToken: string) {
     if (!refreshToken) {
       throw ApiError.BadRequest("Ошибка авторизации");
     }
-    const userData = tokenService.validateRefreshToken(refreshToken);
+    const userData = tokenService.validateToken(refreshToken, "refresh");
     const { rows } = await db.query(
       `SELECT user_id FROM Tokens WHERE token=$1`,
       [refreshToken]

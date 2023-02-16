@@ -1,102 +1,117 @@
-import db from "../../config/db";
+import config from "config";
+import { validationResult } from "express-validator";
+import ApiError from "../exceptions/api-error";
+import mailService from "../service/mail-service";
+import phoneService from "../service/phone-service";
+import tokenTGService from "../service/tokenTG-service";
+import userService from "../service/user-service";
 
 class AuthController {
-  async checkEmail(req, res) {
+  async registration(req, res, next) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return next(
+          ApiError.BadRequest("Ошибка при валидации", errors.array())
+        );
+      }
+      const userData = await userService.registration(req.body);
+      res.cookie("refreshToken", userData.refreshToken, {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+      });
+      return res.json(userData);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async login(req, res, next) {
+    try {
+      const userData = await userService.login(req.email, req.password);
+      res.cookie("refreshToken", userData.refreshToken, {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+      });
+      return res.json(userData);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async logout(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies;
+      const token = await userService.logout(refreshToken);
+      res.clearCookie("refreshToken");
+      return res.json(token);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async activate(req, res, next) {
+    try {
+      const activationLink = req.params.link;
+      await userService.activate(activationLink);
+      return res.redirect(config.get("client_url"));
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async refresh(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies;
+      const userData = await userService.refresh(refreshToken);
+      res.cookie("refreshToken", userData.refreshToken, {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+      });
+      return res.json(userData);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async checkEmail(req, res, next) {
     try {
       const { email } = req.body;
-      const user = await db.query(`SELECT * FROM users where email=$1`, [
-        email,
-      ]);
-      switch (user.rows.length) {
-        case 1:
-          return res.status(200).json({
-            success: false,
-            message: "данный email уже зарегистрирован",
-          });
-        case 0:
-          return res
-            .status(200)
-            .json({ success: true, message: "данный email не занят" });
-        default:
-          console.error(
-            `Для user.rows.length с значением: ${user.rows.length} сценарий не определен`
-          );
-          break;
-      }
-    } catch (error) {
-      console.error(error);
+      const result = await mailService.checkEmail(email);
+      return res.status(200).json(result);
+    } catch (e) {
+      next(e);
     }
   }
 
   async checkPhone(req, res, next) {
     try {
       const { phone } = req.body;
-      const user = await db.query(`SELECT * FROM users where phone=$1`, [
-        `+${phone.match(/\d/g).join("")}`,
-      ]);
-      switch (user.rows.length) {
-        case 1:
-          return res.status(200).json({
-            success: false,
-            message: "данный номер телефона уже зарегистрирован",
-          });
-
-        case 0:
-          return res
-            .status(200)
-            .json({ success: true, message: "данный phone number не занят" });
-        default:
-          console.error(
-            `Для user.rows.length с значением: ${user.rows.length} сценарий не определен`
-          );
-          break;
-      }
-    } catch (error) {
-      console.error(error);
+      const result = await phoneService.checkPhone(phone);
+      return res.status(200).json(result);
+    } catch (e) {
+      next(e);
     }
   }
 
   async checkTokenTG(req, res, next) {
     try {
       const { token } = req.body;
-      const user = await db.query(`SELECT * FROM users where tg_token=$1`, [
-        token,
-      ]);
-      switch (user.rows.length) {
-        case 1:
-          return res.status(200).json({
-            success: false,
-            message: "данный telegram token уже зарегистрирован",
-          });
-        case 0:
-          return res
-            .status(200)
-            .json({ success: true, message: "данный telegram token не занят" });
-        default:
-          console.error(
-            `Для user.rows.length с значением: ${user.rows.length} сценарий не определен`
-          );
-          break;
-      }
-    } catch (error) {
-      console.error(error);
+      const result = await tokenTGService.checkTokenTG(token);
+      return res.status(200).json(result);
+    } catch (e) {
+      next(e);
     }
   }
-  async login(req, res) {
+
+  async getUsers(req, res, next) {
     try {
-      const { login, password } = req.body;
-      const user = await db.query(
-        `SELECT * FROM users where user_login=$1 and user_password=$2`,
-        [login, password]
-      );
-      if (user.rows.length === 1)
-        return res
-          .status(200)
-          .json({ id: user.rows[0].id, name: user.rows[0].username });
+      const users = await userService.getAllUsers();
+      return res.json(users);
     } catch (e) {
-      return res.status(404).json({ msg: "Authorization error" });
+      next(e);
     }
   }
 }
 
-module.exports = new AuthController();
+export = new AuthController();

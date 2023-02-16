@@ -3,7 +3,7 @@ import db from "../../config/db";
 import config from "config";
 
 class TokenService {
-  generateTokens(payload) {
+  generateTokens(payload): { accessToken: string; refreshToken: string } {
     const accessToken = jwt.sign(payload, config.get("jwt-access-secret"), {
       expiresIn: "30s",
     });
@@ -16,25 +16,31 @@ class TokenService {
     };
   }
 
-  validateAccessToken(token) {
+  validateToken(
+    token: string,
+    type_token: "access" | "refresh"
+  ): boolean | null {
+    const secret = () => {
+      switch (type_token) {
+        case "access":
+          return config.get("jwt-access-secret");
+        case "refresh":
+          return config.get("jwt-refresh-secret");
+        default:
+          console.error(`Для type_token = ${type_token} не определен сценарий`);
+          break;
+      }
+    };
+
     try {
-      const userData = jwt.verify(token, config.get("jwt-access-secret"));
+      const userData: boolean = jwt.verify(token, secret);
       return userData;
     } catch (e) {
       return null;
     }
   }
 
-  validateRefreshToken(token) {
-    try {
-      const userData = jwt.verify(token, config.get("jwt-refresh-secret"));
-      return userData;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async saveToken(userId, refreshToken) {
+  async saveToken(userId: string, refreshToken: string) {
     const tokenData = await db.query(`SELECT * FROM Tokens WHERE user_id=$1`, [
       userId,
     ]);
@@ -45,7 +51,7 @@ class TokenService {
       ]);
   }
 
-  async removeToken(refreshToken) {
+  async removeToken(refreshToken: string) {
     const user = await db.query(`SELECT user_id FROM Tokens WHERE token=$1`, [
       refreshToken,
     ]);
