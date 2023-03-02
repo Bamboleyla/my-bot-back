@@ -20,7 +20,7 @@ class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       });
-      return res.json(userData);
+      return res.status(200).json(userData);
     } catch (e) {
       next(e);
     }
@@ -33,7 +33,7 @@ class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       });
-      return res.json(userData);
+      return res.status(200).json(userData);
     } catch (e) {
       next(e);
     }
@@ -44,7 +44,7 @@ class AuthController {
       const { refreshToken } = req.cookies;
       const token = await userService.logout(refreshToken);
       res.clearCookie("refreshToken");
-      return res.json(token);
+      return res.status(200).json(token);
     } catch (e) {
       next(e);
     }
@@ -52,9 +52,12 @@ class AuthController {
 
   async activate(req, res, next) {
     try {
-      const activationLink = req.params.link;
-      await userService.activate(activationLink);
-      return res.redirect(config.get("client_url"));
+      const { email, code } = req.body;
+      const result = await userService.activate(email, code);
+      if (result) return res.status(200).json({ success: true, message: "" });
+      return res
+        .status(200)
+        .json({ success: false, message: "Неверный пароль" });
     } catch (e) {
       next(e);
     }
@@ -68,7 +71,7 @@ class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       });
-      return res.json(userData);
+      return res.status(200).json(userData);
     } catch (e) {
       next(e);
     }

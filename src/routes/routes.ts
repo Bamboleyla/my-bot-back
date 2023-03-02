@@ -10,7 +10,7 @@ router.post("/checkPhone", authController.checkPhone);
 router.post("/checkTokenTG", authController.checkTokenTG);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
-router.get("/activate/:link", authController.activate);
+router.post("/emailCode", authController.activate);
 router.get("/refresh", authController.refresh);
 router.get("/users", authMiddleware, authController.getUsers);
 router.post(

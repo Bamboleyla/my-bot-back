@@ -1,6 +1,5 @@
 import db from "../../config/db";
 import bcrypt from "bcrypt";
-import uuid from "uuid";
 import config from "config";
 import ApiError from "../exceptions/api-error";
 import { Iregistration } from "./user-service_interface";
@@ -21,9 +20,9 @@ class UserService {
     password,
   }: Iregistration) {
     const hashPassword = await bcrypt.hash(password, 3);
-    const activationLink = uuid.v4();
+    const code = Math.random().toString().slice(3, 7);
     const userID = await db.query(
-      `INSERT INTO Users (first_name,middle_name,last_name,email,phone,country,city,tg_token,user_password,active_link) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING Id,Email,Isactivated`,
+      `INSERT INTO Users (first_name,middle_name,last_name,email,phone,country,city,tg_token,user_password,active_code) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING Id,Email,Isactivated`,
       [
         firstName,
         middleName,
@@ -34,14 +33,11 @@ class UserService {
         city,
         tgToken,
         hashPassword,
-        activationLink,
+        code,
       ]
     );
     if (userID.rows.length === 1) {
-      await mailService.sendActivationMail(
-        email,
-        `${config.get("api_url")}/api/activate/${activationLink}`
-      );
+      await mailService.sendActivationMail(email, code);
       await db.query(`INSERT INTO Tokens (user_id) VALUES($1)`, [
         userID.rows[0].id,
       ]);
@@ -57,19 +53,22 @@ class UserService {
       );
   }
 
-  async activate(activationLink: string) {
-    const user = await db.query(`SELECT Id FROM Users WHERE active_link=$1`, [
-      activationLink,
-    ]);
+  async activate(email: string, code: string): Promise<boolean> {
+    const user = await db.query(
+      `SELECT Active_code FROM Users WHERE email=$1`,
+      [email]
+    );
     if (user.rows.length !== 1) {
-      throw ApiError.BadRequest(
-        `Неккоректная ссылка активации ${activationLink}`
-      );
+      throw ApiError.BadRequest(`Не удалось найти учетную запись`);
     }
-    await db.query(`UPDATE Users SET isActivated=$1 WHERE id=$2`, [
-      true,
-      user.rows[0].id,
-    ]);
+    if (user.rows[0].active_code === code) {
+      await db.query(`UPDATE Users SET isActivated=$1 WHERE email=$2`, [
+        true,
+        email,
+      ]);
+      return true;
+    }
+    return false;
   }
 
   async login(email: string, password: string) {

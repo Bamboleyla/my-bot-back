@@ -9,16 +9,16 @@ class MailService {
     this.transporter = nodemailer.createTransport(config.get("nodemailer"));
   }
 
-  async sendActivationMail(to, link) {
+  async sendActivationMail(to, code) {
     await this.transporter.sendMail({
       from: config.get("nodemailer").auth.user,
       to,
-      subject: "Активация аккаунта на " + config.get("api_url"),
+      subject: "Активация аккаунта",
       text: "",
       html: `
                     <div>
-                        <h1>Для активации перейдите по ссылке</h1>
-                        <a href="${link}">${link}</a>
+                        Код активации акаунта
+                        <h1>${code}</h1>
                     </div>
                 `,
     });
