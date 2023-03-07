@@ -9,7 +9,7 @@ class MailService {
     this.transporter = nodemailer.createTransport(config.get("nodemailer"));
   }
 
-  async sendActivationMail(to, code) {
+  async sendActivationMail(to: string, code: string) {
     await this.transporter.sendMail({
       from: config.get("nodemailer").auth.user,
       to,
@@ -28,12 +28,9 @@ class MailService {
     const user = await db.query(`SELECT * FROM users where email=$1`, [email]);
     switch (user.rows.length) {
       case 1:
-        return {
-          success: false,
-          message: "данный email уже зарегистрирован",
-        };
+        return true;
       case 0:
-        return { success: true, message: "данный email не занят" };
+        return false;
       default:
         console.error(`Для email пользователя: ${email} сценарий не определен`);
         throw ApiError.BadRequest(`Ошибка проверки email ${email}`);

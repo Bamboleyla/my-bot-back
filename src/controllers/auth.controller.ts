@@ -1,4 +1,3 @@
-import config from "config";
 import { validationResult } from "express-validator";
 import ApiError from "../exceptions/api-error";
 import mailService from "../service/mail-service";

@@ -1,8 +1,7 @@
-import ApiError from "../exceptions/api-error";
-
 export default (err, req, res, next) => {
   console.log(err);
-  if (err instanceof ApiError) {
+
+  if (err.type) {
     return res
       .status(err.status)
       .json({ message: err.message, errors: err.errors });

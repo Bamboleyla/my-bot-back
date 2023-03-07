@@ -1,6 +1,5 @@
 import db from "../../config/db";
 import bcrypt from "bcrypt";
-import config from "config";
 import ApiError from "../exceptions/api-error";
 import { Iregistration } from "./user-service_interface";
 import mailService from "./mail-service";
@@ -69,6 +68,35 @@ class UserService {
       return true;
     }
     return false;
+  }
+
+  async changeActiveCode(email: string, code: string) {
+    const user = await db.query(
+      `SELECT Active_code, isActivated FROM Users WHERE email=$1`,
+      [email]
+    );
+    if (user.rows.length !== 1) {
+      throw ApiError.BadRequest(`Не удалось найти учетную запись`);
+    }
+    await db.query(`UPDATE Users SET Active_code=$1 WHERE email=$2`, [
+      code,
+      email,
+    ]);
+  }
+
+  async changePassword(email: string, password: string) {
+    await db.query(`UPDATE Users SET User_password=$1 WHERE email=$2`, [
+      password,
+      email,
+    ]);
+  }
+
+  async isEmailCodeСorrect(email: string, code: string): Promise<boolean> {
+    const user = await db.query(`SELECT * FROM Users WHERE email=$1`, [email]);
+    if (user.rows.length !== 1) {
+      throw ApiError.BadRequest(`Не удалось найти учетную запись`);
+    }
+    return user.rows[0].active_code === code;
   }
 
   async login(email: string, password: string) {
