@@ -1,27 +1,33 @@
 import express from "express";
 import { body } from "express-validator";
 
+// CONTROLLERS
 import authController from "../controllers/auth.controller";
 import authMiddleware from "../middlewares/auth-middleware";
 import forgetPasswordController from "../controllers/forgetPassword.controller";
+import registrationController from "../controllers/registration.controller";
 
 const router = express.Router();
 
-router.post("/checkEmail", authController.checkEmail);
-router.post("/checkPhone", authController.checkPhone);
-router.post("/checkTokenTG", authController.checkTokenTG);
+// AUTH
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
-router.post("/emailCode", authController.activate);
 router.get("/refresh", authController.refresh);
 router.get("/users", authMiddleware, authController.getUsers);
+
+// REGISTRATION
+router.post("/emailCode", registrationController.activate);
+router.post("/checkEmail", registrationController.checkEmail);
+router.post("/checkPhone", registrationController.checkPhone);
+router.post("/checkTokenTG", registrationController.checkTokenTG);
 router.post(
   "/registration",
   body("email").isEmail(),
   body("password").isLength({ min: 3, max: 32 }),
-  authController.registration
+  registrationController.registration
 );
 
+// FORGET PASSWORD
 router.post("/sendCodeToEmail", forgetPasswordController.sendСodeToEmail);
 router.post("/changePassword", forgetPasswordController.changePassword);
 

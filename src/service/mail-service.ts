@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import config from "config";
 import db from "../../config/db";
-import ApiError from "../exceptions/api-error";
+import { validateDbResponse } from "../shared/validateDbResponse";
 
 class MailService {
   transporter: any;
@@ -24,17 +24,11 @@ class MailService {
     });
   }
 
-  async checkEmail(email: string) {
-    const user = await db.query(`SELECT * FROM users where email=$1`, [email]);
-    switch (user.rows.length) {
-      case 1:
-        return true;
-      case 0:
-        return false;
-      default:
-        console.error(`Для email пользователя: ${email} сценарий не определен`);
-        throw ApiError.BadRequest(`Ошибка проверки email ${email}`);
-    }
+  async checkEmail(email: string): Promise<boolean> {
+    const result = await db.query(`SELECT * FROM users where email=$1`, [
+      email,
+    ]);
+    return Boolean(validateDbResponse(result));
   }
 }
 
