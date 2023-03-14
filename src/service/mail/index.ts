@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import config from "config";
-import db from "../../config/db";
-import { validateDbResponse } from "../shared/validateDbResponse";
+import db from "../../../config/db";
+import { validateDbResponse } from "../../shared/validateDbResponse";
 
 class MailService {
   transporter: any;

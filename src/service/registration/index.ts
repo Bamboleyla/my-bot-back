@@ -1,9 +1,8 @@
-import db from "../../config/db";
+import db from "../../../config/db";
 import bcrypt from "bcrypt";
-import ApiError from "../exceptions/api-error";
-import mailService from "./mail-service";
-import tokenService from "./token-service";
-import UserDto from "../dtos/user-dto";
+import ApiError from "../../exceptions/api-error";
+import mailService from "../mail";
+import tokenService from "../token";
 
 interface Iregistration {
   firstName: string;
@@ -28,11 +27,11 @@ class RegistrationService {
     city,
     tgToken,
     password,
-  }: Iregistration) {
+  }: Iregistration): Promise<string> {
     const hashPassword = await bcrypt.hash(password, 3);
     const code = Math.random().toString().slice(3, 7);
     const userID = await db.query(
-      `INSERT INTO Users (first_name,middle_name,last_name,email,phone,country,city,tg_token,user_password,active_code) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING Id,Email,Isactivated`,
+      `INSERT INTO Users (first_name,middle_name,last_name,email,phone,country,city,tg_token,user_password,active_code) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING Id`,
       [
         firstName,
         middleName,
@@ -48,15 +47,10 @@ class RegistrationService {
     );
     if (userID.rows.length === 1) {
       await mailService.sendActivationMail(email, code);
-      await db.query(`INSERT INTO Tokens (user_id) VALUES($1)`, [
-        userID.rows[0].id,
-      ]);
-      const usetDto = new UserDto(userID.rows[0]);
-      const tokens = tokenService.generateTokens({
-        ...usetDto,
+
+      return tokenService.generateTokens({
+        id: userID.rows[0].id,
       });
-      await tokenService.saveToken(userID.rows[0].id, tokens.refreshToken);
-      return { ...tokens, user: usetDto };
     } else
       throw ApiError.BadRequest(
         `Не удалось зарегистрировать пользователя c email: ${email}`

@@ -1,7 +1,7 @@
-import mailService from "../service/mail-service";
+import mailService from "../service/mail";
 import bcrypt from "bcrypt";
 import ApiError from "../exceptions/api-error";
-import registrationService from "../service/registration-service";
+import registrationService from "../service/registration";
 
 class ForgetPasswordController {
   async sendСodeToEmail(req: { body: { email: string } }, res, next) {

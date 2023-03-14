@@ -1,5 +1,5 @@
-import db from "../../config/db";
-import { validateDbResponse } from "../shared/validateDbResponse";
+import db from "../../../config/db";
+import { validateDbResponse } from "../../shared/validateDbResponse";
 
 class TokenTGService {
   async checkTokenTG(token: string) {

@@ -1,9 +1,9 @@
 import { validationResult } from "express-validator";
-import registrationService from "../service/registration-service";
+import registrationService from "../service/registration";
 import ApiError from "../exceptions/api-error";
-import mailService from "../service/mail-service";
-import phoneService from "../service/phone-service";
-import tokenTGService from "../service/tokenTG-service";
+import mailService from "../service/mail";
+import phoneService from "../service/phone";
+import tokenTGService from "../service/tokenTG";
 
 class RegistrationController {
   async registration(req, res, next) {
@@ -14,12 +14,12 @@ class RegistrationController {
           ApiError.BadRequest("Ошибка при валидации", errors.array())
         );
       }
-      const userData = await registrationService.registration(req.body);
-      res.cookie("refreshToken", userData.refreshToken, {
+      const token = await registrationService.registration(req.body);
+      res.cookie("token", token, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       });
-      return res.status(200).json(userData);
+      return res.status(200).json(true);
     } catch (e) {
       next(e);
     }
