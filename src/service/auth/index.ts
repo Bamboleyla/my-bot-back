@@ -10,14 +10,14 @@ class AuthService {
       [email]
     );
     if (user.rows.length !== 1) {
-      throw ApiError.BadRequest("Пользователь с таким email не найден");
+      throw ApiError.BadRequest("Логин или Пароль указан неверно");
     }
     const isPassEquals = await bcrypt.compare(
       password,
       user.rows[0].user_password
     );
     if (!isPassEquals) {
-      throw ApiError.BadRequest("Неверный пароль");
+      throw ApiError.BadRequest("Логин или Пароль указан неверно");
     }
 
     return tokenService.generateTokens({ id: user.rows[0].id });

@@ -1,4 +1,4 @@
-interface Iresult {
+export interface Iresult {
   rows: {}[];
 }
 // Использовать если в результате запроса к db должна вернуться только 1 строка

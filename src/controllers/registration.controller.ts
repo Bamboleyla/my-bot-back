@@ -19,7 +19,7 @@ class RegistrationController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       });
-      return res.status(200).json(true);
+      return res.status(200).json(true); //TODO если пользователь уже зарегистирован -> 200 false
     } catch (e) {
       next(e);
     }
