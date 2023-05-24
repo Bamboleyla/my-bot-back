@@ -1,6 +1,5 @@
 import PhoneService from ".";
 import db from "../../../config/db";
-import { validateDbResponse } from "../../shared/validateDbResponse";
 
 describe("PhoneService", () => {
   describe("checkPhone", () => {
