@@ -64,4 +64,11 @@ describe("AuthService", () => {
       );
     });
   });
+  describe("getAllUsers", () => {
+    it("Должен произойти вызов db.query(`SELECT * FROM Users`)", async () => {
+      jest.spyOn(db, "query").mockResolvedValue({ rows: [] });
+      await AuthService.getAllUsers();
+      expect(db.query).toBeCalledWith(`SELECT * FROM Users`);
+    });
+  });
 });
