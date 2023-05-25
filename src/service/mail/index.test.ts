@@ -1,4 +1,3 @@
-import mail from ".";
 import MailService from ".";
 import db from "../../../config/db";
 
@@ -14,7 +13,7 @@ describe("MailService", () => {
       await MailService.sendActivationMail(email, code);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: "chatbotsinfo@mail.ru",
+        from: "service@example.com",
         to: "test@example.com",
         subject: "Активация аккаунта",
         text: "",
