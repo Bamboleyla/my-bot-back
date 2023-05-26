@@ -3,18 +3,7 @@ import bcrypt from "bcrypt";
 import ApiError from "../../exceptions/api-error";
 import mailService from "../mail";
 import tokenService from "../token";
-
-interface Iregistration {
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  phoneNumber: string;
-  email: string;
-  country: string;
-  city: string;
-  tgToken: string;
-  password: string;
-}
+import { Iregistration } from "./models";
 
 class RegistrationService {
   async registration({
