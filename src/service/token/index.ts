@@ -3,7 +3,7 @@ import config from "config";
 import { IvalidateToken } from "./models";
 
 class TokenService {
-  generateTokens(payload): string {
+  generateTokens(payload: { id: string }): string {
     return jwt.sign(payload, config.get("jwt-access-secret"), {
       expiresIn: "7d",
     });
@@ -11,8 +11,7 @@ class TokenService {
 
   validateToken(token: string): IvalidateToken | null {
     try {
-      const userData = jwt.verify(token, config.get("jwt-access-secret"));
-      return userData;
+      return jwt.verify(token, config.get("jwt-access-secret"));
     } catch (e) {
       return null;
     }
