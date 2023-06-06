@@ -6,10 +6,10 @@ describe("TokenService", () => {
   describe("generateTokens", () => {
     it('При вызове generateTokens(payload) должен произойти вызов jwt.sign(payload, config.get("jwt-access-secret") с соответствующими аргументами', () => {
       jest.spyOn(jwt, "sign");
-      TokenService.generateTokens({ id: "1111" });
+      TokenService.generateTokens({ id: 1111 });
 
       expect(jwt.sign).toBeCalledWith(
-        { id: "1111" },
+        { id: 1111 },
         config.get("jwt-access-secret"),
         {
           expiresIn: "7d",

@@ -3,7 +3,7 @@ import config from "config";
 import { IvalidateToken } from "./models";
 
 class TokenService {
-  generateTokens(payload: { id: string }): string {
+  generateTokens(payload: { id: number }): string {
     return jwt.sign(payload, config.get("jwt-access-secret"), {
       expiresIn: "7d",
     });

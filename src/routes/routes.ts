@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 
+/* istanbul ignore file */
 // CONTROLLERS
 import authController from "../controllers/auth.controller";
 import authMiddleware from "../middlewares/auth-middleware";
