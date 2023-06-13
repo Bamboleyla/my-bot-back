@@ -5,18 +5,19 @@ export default (req, res, next) => {
   try {
     const authorizationHeader = req.headers.authorization;
     if (!authorizationHeader) {
-      return next(ApiError.UnauthorizedError());
+      throw new Error("Отсутствует заголовок");
     }
 
     const accessToken = authorizationHeader.split(" ")[1];
     if (!accessToken) {
-      return next(ApiError.UnauthorizedError());
+      throw new Error("Отсутствует токен");
     }
 
     const userData = tokenService.validateToken(accessToken);
     if (!userData) {
-      return next(ApiError.UnauthorizedError());
+      throw new Error("Токен не валиден");
     }
+
     const date = Date.now() / 1000;
     if (date - userData.iat > 60 * 60 * 24) {
       const token = tokenService.generateTokens({ id: userData.id });
@@ -26,6 +27,7 @@ export default (req, res, next) => {
         httpOnly: true,
       });
     }
+
     req.user_id = userData.id;
     next();
   } catch (e) {
