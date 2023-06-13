@@ -10,6 +10,7 @@ class ForgetPasswordController {
       const code = Math.random().toString().slice(3, 7);
       await registrationService.changeActiveCode(email, code);
       await mailService.sendActivationMail(email, code);
+
       return res.status(200).json();
     } catch (e) {
       next(e);
