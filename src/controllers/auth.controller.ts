@@ -24,6 +24,7 @@ class AuthController {
     }
   }
 
+  //Для удобства проверки авторизации, метод используется только в тестах
   async getUsers(req, res, next) {
     try {
       const users = await authService.getAllUsers();
