@@ -1,7 +1,7 @@
 import authService from "../service/auth";
 
 class AuthController {
-  async login(req, res, next) {
+  async login(req, res, next): Promise<Response> {
     try {
       const { email, password } = req.body;
       const token = await authService.login(email, password);
@@ -15,7 +15,7 @@ class AuthController {
     }
   }
 
-  async logout(req, res, next) {
+  async logout(req, res, next): Promise<Response> {
     try {
       res.clearCookie("token");
       return res.status(200).json();
@@ -25,7 +25,7 @@ class AuthController {
   }
 
   //Для удобства проверки авторизации, метод используется только в тестах
-  async getUsers(req, res, next) {
+  async getUsers(req, res, next): Promise<Response> {
     try {
       const users = await authService.getAllUsers();
       return res.json({ users, new_token: req.user });

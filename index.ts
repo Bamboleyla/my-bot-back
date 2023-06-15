@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import errorMiddleware from "./src/middlewares/error-middleware";
 import router from "./src/routes/routes";
 
-const app = express();
+export const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
